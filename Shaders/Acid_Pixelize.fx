@@ -15,7 +15,7 @@ uniform int Num_Colors < __UNIFORM_SLIDER_INT1
 	ui_label = "Number Of Colors";
 	ui_min = 2; ui_max = 16;
 	ui_tooltip = "Adjust number of colors PER COLOR CHANNEL in the image.";
-> = 16;
+> = 32;
 
 uniform float Spread < __UNIFORM_SLIDER_FLOAT1
 	ui_label = "Dither Spread";
@@ -42,9 +42,10 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 
 	if (Is_Grayscale){
     	float gray_scale = dot(float3(0.2989, 0.589, 0.114), col);
-    	col = float3(gray_scale, gray_scale, gray_scale) + (dither_noise * Spread);
+    	col = float3(gray_scale, gray_scale, gray_scale);
 	}
 
+	col += dither_noise * Spread;
     col = floor(col * (Num_Colors - 1.) + 0.5) / (Num_Colors - 1.);
 
 	return col;
