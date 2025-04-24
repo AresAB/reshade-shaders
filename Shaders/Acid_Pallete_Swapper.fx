@@ -37,7 +37,7 @@ uniform float H_1 < __UNIFORM_SLIDER_FLOAT1
 uniform float L_spread < __UNIFORM_SLIDER_FLOAT1
 	ui_label = "Luminance Change";
 	ui_tooltip = "Luminance difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
-	ui_min = 0.; ui_max = 1.;
+	ui_min = -1.; ui_max = 1.;
 > = 0.;
 
 uniform float C_spread < __UNIFORM_SLIDER_FLOAT1
