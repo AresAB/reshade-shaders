@@ -52,6 +52,11 @@ uniform float H_spread < __UNIFORM_SLIDER_FLOAT1
 	ui_min = -360.; ui_max = 360.;
 > = 0.;
 
+uniform float Lerp_val < __UNIFORM_SLIDER_FLOAT1
+	ui_label = "Mix Strength";
+	ui_tooltip = "Interpolation value between original color and newly generated colors, with 1 being only new colors and 0 being only original colors";
+> = 1.;
+
 #include "ReShade.fxh"
 
 float3 oklch_to_RGB(float3 LCH)
@@ -88,8 +93,9 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 
     float dither_noise = (bayer[int(texcoord.x * BUFFER_SCREEN_SIZE.x) % 4][int(texcoord.y * BUFFER_SCREEN_SIZE.y) % 4] / 16.) - 0.5;
 
+	float3 col = tex2D(ReShade::BackBuffer, texcoord).rgb;
 	// we can effectively use the grayscaled color as uv's for the new pallete
-	float uv = dot(float3(0.2989, 0.589, 0.114), tex2D(ReShade::BackBuffer, texcoord).rgb);
+	float uv = dot(float3(0.2989, 0.589, 0.114), col);
 	uv += (dither_noise * Spread);
 	uv = floor(uv * (Num_Colors - 1.) + 0.5) / (Num_Colors - 1.);
 
@@ -103,7 +109,7 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
     oklch.z = (oklch.z + 360) % 360;
     oklch.z *= 3.14 / 180.; // convert from degrees to rads
 
-	return oklch_to_RGB(oklch);
+	return lerp(col, oklch_to_RGB(oklch), Lerp_val);
 }
 
 technique PalleteSwapper
