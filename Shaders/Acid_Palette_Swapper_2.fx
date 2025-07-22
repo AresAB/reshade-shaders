@@ -126,7 +126,7 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 	return lerp(col, I_col + oklch_to_RGB(oklch_spread), Lerp_val);*/
 }
 
-technique PalleteSwapperDeluxe
+technique PaletteSwapperDeluxe
 {
 	pass
 	{

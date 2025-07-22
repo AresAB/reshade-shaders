@@ -1,5 +1,9 @@
 #include "ReShadeUI.fxh"
 
+//uniform float3 Color_Filter < __UNIFORM_COLOR_FLOAT3
+	//ui_tooltip = "Multiply image with color.";
+//> = float3(1., 1., 1.);
+
 uniform int Num_Colors < __UNIFORM_SLIDER_INT1
 	ui_label = "Number Of Colors";
 	ui_min = 2; ui_max = 32;
@@ -12,80 +16,38 @@ uniform float Spread < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Adjust the spread of the dither pattern.";
 > = 0.;
 
-uniform float Divider < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Color Pallete Divider";
-	ui_min = 0.; ui_max = 1.;
-	ui_tooltip = "Adjust when the color palletes switch.";
-> = 0.5;
-
 uniform float L_1 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Luminance 1";
+	ui_label = "Luminance";
 	ui_tooltip = "Adjust luminance of first color.";
 	ui_min = 0.; ui_max = 1.;
 > = 0.5;
 
 uniform float C_1 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Chroma 1";
+	ui_label = "Chroma";
 	ui_tooltip = "Adjust chroma of first color.";
 	ui_min = 0.; ui_max = 1.;
 > = 0.15;
 
 uniform float H_1 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Hue 1";
+	ui_label = "Hue";
 	ui_tooltip = "Adjust hue of first color.";
 	ui_min = 0.; ui_max = 360.;
 > = 215.;
 
-uniform float L_1_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Luminance Change 1";
+uniform float L_spread < __UNIFORM_SLIDER_FLOAT1
+	ui_label = "Luminance Change";
 	ui_tooltip = "Luminance difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
 	ui_min = -1.; ui_max = 1.;
 > = 0.;
 
-uniform float C_1_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Chroma Change 1";
+uniform float C_spread < __UNIFORM_SLIDER_FLOAT1
+	ui_label = "Chroma Change";
 	ui_tooltip = "Chroma difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
 	ui_min = -1.; ui_max = 1.;
 > = 0.;
 
-uniform float H_1_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Hue Change 1";
-	ui_tooltip = "Hue difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
-	ui_min = -360.; ui_max = 360.;
-> = 0.;
-
-uniform float L_2 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Luminance 2";
-	ui_tooltip = "Adjust luminance of second color.";
-	ui_min = 0.; ui_max = 1.;
-> = 0.5;
-
-uniform float C_2 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Chroma 2";
-	ui_tooltip = "Adjust chroma of second color.";
-	ui_min = 0.; ui_max = 1.;
-> = 0.15;
-
-uniform float H_2 < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Hue 2";
-	ui_tooltip = "Adjust hue of second color.";
-	ui_min = 0.; ui_max = 360.;
-> = 215.;
-
-uniform float L_2_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Luminance Change 2";
-	ui_tooltip = "Luminance difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
-	ui_min = -1.; ui_max = 1.;
-> = 0.;
-
-uniform float C_2_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Chroma Change 2";
-	ui_tooltip = "Chroma difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
-	ui_min = -1.; ui_max = 1.;
-> = 0.;
-
-uniform float H_2_spread < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Hue Change 2";
+uniform float H_spread < __UNIFORM_SLIDER_FLOAT1
+	ui_label = "Hue Change";
 	ui_tooltip = "Hue difference between first color and final. NOTE: harmonic color palletes generally have 1 of the change sliders remain at 0.";
 	ui_min = -360.; ui_max = 360.;
 > = 0.;
@@ -137,12 +99,10 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 	uv += (dither_noise * Spread);
 	uv = floor(uv * (Num_Colors - 1.) + 0.5) / (Num_Colors - 1.);
 
-	float is_pal_1 = floor(uv + Divider);
-
 	float3 oklch;
-	oklch.x = (L_1 + (L_1_spread * uv)) * is_pal_1 + (L_2 + (L_2_spread * uv)) * (1 - is_pal_1);
-	oklch.y = (C_1 + (C_1_spread * uv)) * is_pal_1 + (C_2 + (C_2_spread * uv)) * (1 - is_pal_1);
-	oklch.z = (H_1 + (H_1_spread * uv)) * is_pal_1 + (H_2 + (H_2_spread * uv)) * (1 - is_pal_1);
+	oklch.x = L_1 + (L_spread * uv);
+	oklch.y = C_1 + (C_spread * uv);
+	oklch.z = H_1 + (H_spread * uv);
 
     oklch.x = max(min(oklch.x, 1.), 0);
     oklch.y = max(min(oklch.y, 1.), 0);
@@ -152,7 +112,7 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 	return lerp(col, oklch_to_RGB(oklch), Lerp_val);
 }
 
-technique PalleteSwapperDuoTone
+technique PaletteSwapper
 {
 	pass
 	{
