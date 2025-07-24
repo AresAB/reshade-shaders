@@ -39,6 +39,24 @@ uniform float H_spread < __UNIFORM_SLIDER_FLOAT1
 	ui_min = -360.; ui_max = 360.;
 > = 0.;
 
+uniform int Is_lum_reverse < __UNIFORM_SLIDER_INT1
+    ui_label = "Reverse Luminance?";
+    ui_tooltip = "Reverse the order of color's luminosity";
+    ui_min = 0; ui_max = 1;
+> = 0;
+
+uniform int Is_chroma_reverse < __UNIFORM_SLIDER_INT1
+    ui_label = "Reverse Chroma?";
+    ui_tooltip = "Reverse the order of color's chroma";
+    ui_min = 0; ui_max = 1;
+> = 0;
+
+uniform int Is_hue_reverse < __UNIFORM_SLIDER_INT1
+    ui_label = "Reverse Hue?";
+    ui_tooltip = "Reverse the order of color's hue";
+    ui_min = 0; ui_max = 1;
+> = 0;
+
 uniform float Lerp_val < __UNIFORM_SLIDER_FLOAT1
 	ui_label = "Mix Strength";
 	ui_tooltip = "Interpolation value between original color and newly generated colors, with 1 being only new colors and 0 being only original colors";
@@ -109,9 +127,9 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
 	float3 oklch = RGB_to_oklch(I_col);
     oklch.z *= 180. / 3.14;
 
-	oklch.x += L_spread * uv;
-	oklch.y += C_spread * uv;
-	oklch.z += H_spread * uv;
+	oklch.x += L_spread * ((1 - uv) * Is_lum_reverse + uv * (1 - Is_lum_reverse));
+	oklch.y += C_spread * ((1 - uv) * Is_chroma_reverse + uv * (1 - Is_chroma_reverse));
+	oklch.z += H_spread * ((1 - uv) * Is_hue_reverse + uv * (1 - Is_hue_reverse));
 
     oklch.x = max(min(oklch.x, 1.), 0);
     oklch.y = max(min(oklch.y, 1.), 0);
