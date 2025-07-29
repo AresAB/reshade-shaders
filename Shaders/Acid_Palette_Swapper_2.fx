@@ -1,9 +1,5 @@
 #include "ReShadeUI.fxh"
 
-//uniform float3 Color_Filter < __UNIFORM_COLOR_FLOAT3
-	//ui_tooltip = "Multiply image with color.";
-//> = float3(1., 1., 1.);
-
 uniform int Num_Colors < __UNIFORM_SLIDER_INT1
 	ui_label = "Number Of Colors";
 	ui_min = 2; ui_max = 32;
@@ -82,7 +78,7 @@ float3 oklch_to_RGB(float3 LCH)
     rgb.g = l * -1.2684380046 + m * 2.6097574011 + s * -0.3413193965;
     rgb.b = l * -0.0041960863 + m * -0.7034186147 + s * 1.7076147010;
 
-    rgb = max(min(rgb, 1.), -1);
+    rgb = max(min(rgb, 1.), 0);
 
     return rgb;
 }
