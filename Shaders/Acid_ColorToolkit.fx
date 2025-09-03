@@ -34,9 +34,14 @@ uniform float Saturation < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Adjust saturation of image.";
 > = 1.;
 
-uniform bool Is_Tone_Map <
-    ui_label = "Tone Map?";
-    ui_tooltip = "Maps HDR color to the 0-1 color range.";
+uniform bool Is_ACES <
+    ui_label = "Narkowicz ACES Tone Map?";
+    ui_tooltip = "Maps HDR color to the 0-1 color range, lighter than Tumblin Rushmeier. NOTE: Only do one tone map at a time.";
+> = false;
+
+uniform bool Is_Tumblin <
+    ui_label = "Tumblin Rushmeier Tone Map?";
+    ui_tooltip = "Maps HDR color to the 0-1 color range, darker than ACES. NOTE: Only do one tone map at a time.";
 > = false;
 
 uniform float Gamma < __UNIFORM_SLIDER_FLOAT1
@@ -48,6 +53,25 @@ uniform float Gamma < __UNIFORM_SLIDER_FLOAT1
 float3 Narkowicz_ACES(float3 hdr)
 {
     return saturate((hdr * (2.51 * hdr + 0.03)) / (hdr * (2.43 * hdr + 0.59) + 0.14));
+}
+
+float3 Tumblin_Rushmeier(float3 hdr, float3 avg)
+{
+    float Lin = dot(float3(0.2989, 0.589, 0.114), hdr);
+    float Lavg = dot(float3(0.2989, 0.589, 0.114), avg);
+    float _Ldmax = 1.; //luminance max (usually just 1)
+    float _Cmax = 1000.; //contrast max //1000 //35 num for CRT
+
+    float logLrw = log10(Lavg) + 0.84;
+    float alphaRw = 0.4 * logLrw + 2.92;
+    float betaRw = -0.4 * logLrw * logLrw - 2.584 * logLrw + 2.0208;
+    float Lwd = _Ldmax / sqrt(_Cmax);
+    float logLd = log10(Lwd) + 0.84;
+    float alphaD = 0.4 * logLd + 2.92;
+    float betaD = -0.4 * logLd * logLd - 2.584 * logLd + 2.0208;
+    float Lout = pow(Lin, alphaRw / alphaD) / _Ldmax * pow(10., (betaRw / betaD) / alphaD) - (1.0 / _Cmax);
+
+    return saturate(hdr / Lin * Lout);
 }
 
 float3 WhiteBalance(float3 col, float temp, float tint)
@@ -106,7 +130,8 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
     col = lerp(float3(gray_scale, gray_scale, gray_scale), col, Saturation);
 
     // tone mapping
-    col = Narkowicz_ACES(col) * Is_Tone_Map + min(col, 1.); * (1 - Is_Tone_Map);
+    col = Narkowicz_ACES(col) * Is_ACES + col * (1 - Is_ACES);
+    col = Tumblin_Rushmeier(col, tex2Dlod(ReShade::BackBuffer, float4(texcoord.x, texcoord.y, 0., 10.)).rgb) * Is_Tumblin + min(col, 1.) * (1 - Is_Tumblin);
 
     col.r = pow(col.r, Gamma);
     col.g = pow(col.g, Gamma);
