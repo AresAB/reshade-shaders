@@ -34,10 +34,16 @@ uniform float Saturation < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Adjust saturation of image.";
 > = 1.;
 
+uniform bool Is_Tone_Map <
+    ui_label = "Tone Map?";
+    ui_tooltip = "Maps HDR color to the 0-1 color range.";
+> = false;
+
 uniform float Gamma < __UNIFORM_SLIDER_FLOAT1
 	ui_min = 0.; ui_max = 10.;
 	ui_tooltip = "Adjust gamma of image.";
 > = 1.;
+
 
 float3 Narkowicz_ACES(float3 hdr)
 {
@@ -68,7 +74,7 @@ float3 WhiteBalance(float3 col, float temp, float tint)
     float3x3 LIN_2_LMS_MAT = float3x3(
         float3(3.90405e-1, 5.49941e-1, 8.92632e-3),
         float3(7.08416e-2, 9.63172e-1, 1.35775e-3),
-        float3(2.31082e-2, 1.35775e-3, 9.36245e-1)
+        float3(2.31082e-2, 1.28021e-1, 9.36245e-1)
     );
 
     float3x3 LMS_2_LIN_MAT = float3x3(
@@ -100,7 +106,7 @@ float3 MyPass(float4 vois : SV_Position, float2 texcoord : TexCoord) : SV_Target
     col = lerp(float3(gray_scale, gray_scale, gray_scale), col, Saturation);
 
     // tone mapping
-    col = Narkowicz_ACES(col);
+    col = Narkowicz_ACES(col) * Is_Tone_Map + min(col, 1.); * (1 - Is_Tone_Map);
 
     col.r = pow(col.r, Gamma);
     col.g = pow(col.g, Gamma);
